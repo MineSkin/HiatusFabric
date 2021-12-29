@@ -12,7 +12,11 @@ import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mineskin.hiatus.Account;
@@ -68,18 +72,32 @@ public class HiatusFabric implements ModInitializer {
             hiatus.onGameClosing();
         }));
 
+        Command<FabricClientCommandSource> help = context -> {
+            context.getSource().sendFeedback(new LiteralText("\n")
+                    .append(new LiteralText("/mineskin hiatus list\n")
+                            .styled(style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/mineskin hiatus list"))))
+                    .append(new LiteralText("/mineskin hiatus add <token> <email>\n")
+                            .styled(style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/mineskin hiatus add "))))
+                    .append(new LiteralText("/mineskin hiatus remove <email>\n")
+                            .styled(style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/mineskin hiatus remove "))))
+                    .append(Text.of("\n"))
+                    .append(new LiteralText("[Login on mineskin.org]")
+                            .styled(style -> style.withBold(true)
+                                    .withColor(Formatting.YELLOW)
+                                    .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://mineskin.org/account?hiatus=true"))
+                                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText("Click to go to mineskin.org")))
+                            ))
+                    .append(Text.of(" to link your account"))
+            );
+            return Command.SINGLE_SUCCESS;
+        };
+
         CommandDispatcher<FabricClientCommandSource> dispatcher = ClientCommandManager.DISPATCHER;
         dispatcher.register(literal("mineskin")
-                .executes(context -> {
-                    context.getSource().sendFeedback(Text.of("/mineskin hiatus"));
-                    return Command.SINGLE_SUCCESS;
-                }));
+                .executes(help));
         dispatcher.register(literal("mineskin")
                 .then(literal("hiatus")
-                        .executes(context -> {
-                            context.getSource().sendFeedback(Text.of("/mineskin hiatus add <token> <email>"));
-                            return Command.SINGLE_SUCCESS;
-                        })));
+                        .executes(help)));
 
         dispatcher.register(literal("mineskin")
                 .then(literal("hiatus")
@@ -89,11 +107,18 @@ public class HiatusFabric implements ModInitializer {
                                         if (accounts.isEmpty()) {
                                             context.getSource().sendFeedback(Text.of("No accounts registered"));
                                         } else {
-                                            StringBuilder msg = new StringBuilder("Registered accounts: ");
+                                            LiteralText text = new LiteralText("\nRegistered accounts:\n");
                                             for (Map.Entry<UUID, String> account : accounts.entrySet()) {
-                                                msg.append(account.getValue()).append(" ").append(account.getKey()).append("\n");
+                                                text.append(new LiteralText(account.getValue() + " " + account.getKey()))
+                                                        .append(new LiteralText(" [Remove]\n")
+                                                                .styled(style -> style.withBold(true)
+                                                                        .withColor(Formatting.RED)
+                                                                        .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/mineskin hiatus remove " + account.getValue()))
+                                                                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText("Click to remove")))
+                                                                )
+                                                        );
                                             }
-                                            context.getSource().sendFeedback(Text.of(msg.toString()));
+                                            context.getSource().sendFeedback(text);
                                         }
                                     });
                                     return Command.SINGLE_SUCCESS;
@@ -108,9 +133,10 @@ public class HiatusFabric implements ModInitializer {
                                                     String token = context.getArgument("token", String.class);
                                                     String email = context.getArgument("email", String.class);
 
-                                                    if (gameProfile != null) {
-                                                        hiatus.setAccount(new Account(gameProfile.getId(), email, token));
-                                                        context.getSource().sendFeedback(Text.of("Account added!"));
+                                                    GameProfile profile = MinecraftClient.getInstance().getSession().getProfile();
+                                                    if (profile != null) {
+                                                        hiatus.setAccount(new Account(profile.getId(), email, token));
+                                                        context.getSource().sendFeedback(Text.of("\nAccount added!"));
                                                         hiatus.onGameLaunching(); // send as if the game just launched
                                                     } else {
                                                         context.getSource().sendError(Text.of("Failed to add account, no game profile found!"));
@@ -138,7 +164,7 @@ public class HiatusFabric implements ModInitializer {
                                                         return;
                                                     }
                                                     hiatus.deleteAccount(uuid);
-                                                    context.getSource().sendFeedback(Text.of("Account removed!"));
+                                                    context.getSource().sendFeedback(Text.of("\nAccount removed!"));
                                                 }
                                             });
 
