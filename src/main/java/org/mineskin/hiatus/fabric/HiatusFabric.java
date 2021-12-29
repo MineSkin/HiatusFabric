@@ -135,6 +135,11 @@ public class HiatusFabric implements ModInitializer {
 
                                                     GameProfile profile = MinecraftClient.getInstance().getSession().getProfile();
                                                     if (profile != null) {
+                                                        if (!MineSkinHiatus.validateTokenAccount(profile.getId(), token)) {
+                                                            context.getSource().sendError(Text.of("Please launch the game with the account you're trying to link (invalid token)"));
+                                                            return Command.SINGLE_SUCCESS;
+                                                        }
+
                                                         hiatus.setAccount(new Account(profile.getId(), email, token));
                                                         context.getSource().sendFeedback(Text.of("\nAccount added!"));
                                                         hiatus.onGameLaunching(); // send as if the game just launched
