@@ -4,7 +4,7 @@ plugins {
     id "com.github.johnrengelman.shadow" version "7.1.1"
 }
 
-version = project.mod_version
+version = "${project.minecraft_version}-${project.mod_version}"
 group = project.maven_group
 
 repositories {
