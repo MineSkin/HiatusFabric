@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "mineskin-hiatus",
+  "version": "${version}",
+
+  "name": "MineSkin Hiatus",
+  "description": "Pause accounts registered with MineSkin while playing Minecraft",
+  "authors": [
+    "inventivetalent"
+  ],
+  "contact": {
+    "homepage": "https://mineskin.org/"
+  },
+
+  "license": "MIT",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "org.mineskin.hiatus.fabric.HiatusFabric"
+    ]
+  },
+  "mixins": [
+    "hiatus-fabric.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.11.3",
+    "minecraft": "1.18.x",
+    "java": ">=17"
+  },
+  "suggests": {
+
+  }
+}
