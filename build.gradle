@@ -27,30 +27,16 @@ dependencies {
 
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
-    //include "org.mineskin:hiatus-client:1.0-SNAPSHOT"
-    //implementation "org.mineskin:hiatus-client:1.0-SNAPSHOT"
-    shadow "org.mineskin:hiatus-client:1.0-SNAPSHOT"
-    implementation "org.mineskin:hiatus-client:1.0-SNAPSHOT"
+    shadow "org.mineskin:hiatus-client:${project.hiatus_version}"
+    implementation "org.mineskin:hiatus-client:${project.hiatus_version}"
 }
 
 apply plugin: 'com.github.johnrengelman.shadow'
-//import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
-//
-//task relocateShadowJar(type: ConfigureShadowRelocation) {
-//    target = tasks.shadowJar
-//    prefix = "${project.group}.${project.archivesBaseName}.shadow"
-//}
-//tasks.shadowJar.dependsOn tasks.relocateShadowJar
-//
-//remapJar {
-//    dependsOn shadowJar
-//    input.set shadowJar.archiveFile.get()
-//}
 
 shadowJar {
-    relocate 'com.google.gson', 'org.mineskin.hiatus';
-    relocate 'okhttp3', 'org.mineskin.hiatus';
-    relocate 'okio', 'org.mineskin.hiatus';
+    relocate 'com.google.gson', 'org.mineskin.hiatus.gson';
+    relocate 'okhttp3', 'org.mineskin.hiatus.http';
+    relocate 'okio', 'org.mineskin.hiatus.http';
 
     configurations = [project.configurations.shadow]
     classifier = 'dev'
