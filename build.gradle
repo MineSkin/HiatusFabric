@@ -7,6 +7,8 @@ plugins {
 version = "${project.minecraft_version}-${project.mod_version}"
 group = project.maven_group
 
+apply plugin: 'com.github.johnrengelman.shadow'
+
 repositories {
     // Add repositories to retrieve artifacts from in here.
     // You should only use this when depending on other mods because
@@ -25,28 +27,11 @@ dependencies {
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
-    // You may need to force-disable transitiveness on them.
     shadow "org.mineskin:hiatus-client:${project.hiatus_version}"
     implementation "org.mineskin:hiatus-client:${project.hiatus_version}"
 }
 
-apply plugin: 'com.github.johnrengelman.shadow'
 
-shadowJar {
-    relocate 'com.google.gson', 'org.mineskin.hiatus.gson';
-    relocate 'okhttp3', 'org.mineskin.hiatus.http';
-    relocate 'okio', 'org.mineskin.hiatus.http';
-
-    configurations = [project.configurations.shadow]
-    classifier = 'dev'
-}
-
-remapJar {
-    dependsOn shadowJar
-}
-
-shadowJar.mustRunAfter jar
 
 processResources {
     inputs.property "version", project.version
@@ -87,13 +72,30 @@ jar {
     }
 }
 
+shadowJar {
+    relocate 'com.google.gson', 'org.mineskin.hiatus.gson';
+    relocate 'okhttp3', 'org.mineskin.hiatus.http';
+    relocate 'okio', 'org.mineskin.hiatus.http';
+
+    configurations = [project.configurations.shadow]
+    classifier = 'dev'
+}
+
+remapJar {
+    dependsOn shadowJar
+
+    inputFile = shadowJar.archiveFile
+}
+
+shadowJar.mustRunAfter jar
+
 // configure the maven publication
 publishing {
     publications {
         mavenJava(MavenPublication) {
             // add all the jars that should be included when publishing to maven
-            artifact(remapJar) {
-                builtBy remapJar
+            artifact(shadowJar) {
+                builtBy shadowJar
             }
             artifact(sourcesJar) {
                 builtBy remapSourcesJar
